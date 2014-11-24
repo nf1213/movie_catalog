@@ -18,20 +18,12 @@
 
       <input type="submit" value="Search" />
     </form>
-    <h2><a class="rand" href="/movies/<%= @random %>">Random Movie</a></h2>
+    <h2><a class="rand" href="/random">Random Movie</a></h2>
   </div>
-  <% @movies.each do |id, info| %>
-    <% if @filter.nil? %>
-        <p><a class="title" href="/movies/<%= id%>"><%= info['title'] %></a></p>
-    <% elsif @filter.length == 1%>
-      <% if info['title'] =~ /^#{@filter}.*$/i %>
-        <p><a class="title" href="/movies/<%= id%>"><%= info['title'] %></a></p>
-      <% end %>
-    <% else %>
-      <% if info['title'] =~ /#{@filter}/i %>
-        <p><a class="title" href="/movies/<%= id%>"><%= info['title'] %></a></p>
-      <% end %>
-    <% end %>
+  <% @movies.each do |movie| %>
+    <% id = movie['id'] %>
+    <% title = movie['title'] %>
+      <p><a class="title" href="/movies/<%= id%>"><%= title %></a></p>
   <% end %>
 </body>
 </html>

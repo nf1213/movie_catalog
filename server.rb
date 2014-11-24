@@ -13,49 +13,92 @@ def db_connection
   end
 end
 
-def random_number
-  random = 0
-  @movies = movies_from_db_to_hash
-  while !@movies.has_key?(random.to_s) do
-    random = rand(@movies.size).round
+def find_random_movie
+  sql = %{
+    SELECT movies.id, movies.title, movies.year, movies.synopsis,
+    movies.rating, genres.name AS genre, studios.name AS studio FROM movies
+    JOIN genres ON genres.id = movies.genre_id
+    JOIN studios ON movies.studio_id = studios.id
+    ORDER BY RANDOM() LIMIT 1
+  }
+  movie = db_connection do |db|
+    db.exec(sql)
   end
-  random
+  movie.to_a.first
 end
 
-def movies_from_db
-  movies = db_connection do |conn|
-    conn.exec('SELECT movies.id, movies.title, movies.year, movies.synopsis, movies.rating, genres.name AS genre, studios.name AS studio FROM movies JOIN genres ON genres.id = movies.genre_id JOIN studios ON movies.studio_id = studios.id ORDER BY movies.title')
+def find_movie_by_id(id)
+  sql = %{
+    SELECT movies.id, movies.title, movies.year, movies.synopsis,
+    movies.rating, genres.name AS genre, studios.name AS studio FROM movies
+    JOIN genres ON genres.id = movies.genre_id
+    JOIN studios ON movies.studio_id = studios.id
+    WHERE movies.id = $1 ORDER BY movies.title
+  }
+  movie = db_connection do |db|
+    db.exec_params(sql, [id])
   end
+  movie.to_a.first
 end
 
-def movies_from_db_to_hash
-  movies_array = movies_from_db.to_a
-  hash = {}
-
-  movies_array.each do |movie|
-    hash[movie['id']] = movie
+def find_movies_by_title(string)
+  sql = %{
+    SELECT title, id FROM movies
+    WHERE title ILIKE '%#{string}%' ORDER BY title
+  }
+  movies = db_connection do |db|
+    db.exec(sql)
   end
-  hash
+  movies.to_a
+end
+
+def find_movies_starting_with(string)
+  sql = %{
+    SELECT title, id FROM movies
+    WHERE title ILIKE '#{string}%' ORDER BY title
+  }
+  movies = db_connection do |db|
+    db.exec(sql)
+  end
+  movies.to_a
+end
+
+def movie_titles_and_ids
+  sql = 'SELECT title, id FROM movies ORDER BY title'
+  movies = db_connection do |db|
+    db.exec(sql)
+  end
+  movies.to_a
 end
 
 get '/movies' do
-  @movies = movies_from_db_to_hash
+  @movies = movie_titles_and_ids
   @letters = 'a'.upto('z').to_a
-  @random = random_number
   erb :index
 end
 
 get '/search/' do
   @search = params[:query]
+  @search.gsub!(" ", "+")
   redirect "/filter/#{@search}"
 end
 
 get '/filter/:filter' do
   @letters = 'a'.upto('z').to_a
-  @movies = movies_from_db_to_hash
-  @filter = params[:filter]
-  @random = random_number
+  filter = params[:filter]
+  filter.gsub!("+", " ")
+  if filter.length == 1
+    @movies = find_movies_starting_with(filter)
+  else
+    @movies = find_movies_by_title(filter)
+  end
   erb :index
+end
+
+get '/random' do
+  @letters = @letters = 'a'.upto('z').to_a
+  @movie = find_random_movie
+  erb :show
 end
 
 get '/filter/' do
@@ -64,10 +107,8 @@ end
 
 get '/movies/:id' do
   id = params[:id]
-  @movies = movies_from_db_to_hash
-  @movie = @movies[id]
+  @movie = find_movie_by_id(id)
   @letters = 'a'.upto('z').to_a
-  @random = random_number
   erb :show
 end
 
