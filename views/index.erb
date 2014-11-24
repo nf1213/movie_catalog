@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Movie Catalog</title>
+  <link rel="stylesheet" href="../home.css"/>
+  <link href='http://fonts.googleapis.com/css?family=Fredoka+One' rel='stylesheet' type='text/css'>
+</head>
+<body>
+  <div id="nav">
+    <h1><a href="/">Movie Catalog</a></h1>
+    <p><% @letters.each do |let| %>
+      <a class="let" href='/filter/<%= let %>'><%= let %></a>
+      <% end %>
+    </p>
+    <form action="/search/" method="get">
+      <label for="query">Search: </label>
+      <input type="text" name="query" id="query" />
+
+      <input type="submit" value="Search" />
+    </form>
+    <h2><a class="rand" href="/movies/<%= @random %>">Random Movie</a></h2>
+  </div>
+  <% @movies.each do |id, info| %>
+    <% if @filter.nil? %>
+        <p><a class="title" href="/movies/<%= id%>"><%= info[:title] %></a></p>
+    <% elsif @filter.length == 1%>
+      <% if info[:title] =~ /^#{@filter}.*$/i %>
+        <p><a class="title" href="/movies/<%= id%>"><%= info[:title] %></a></p>
+      <% end %>
+    <% else %>
+      <% if info[:title] =~ /#{@filter}/i %>
+        <p><a class="title" href="/movies/<%= id%>"><%= info[:title] %></a></p>
+      <% end %>
+    <% end %>
+  <% end %>
+</body>
+</html>

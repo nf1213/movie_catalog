@@ -1,0 +1,33 @@
+#nav {
+  background-color: #941221;
+  padding: 5px 5px;
+  color: #ffffff;
+}
+
+h1 a {
+  color: #EEEEEE;
+  text-decoration: none;
+  font-family: 'Fredoka One', cursive;
+
+}
+
+.title {
+  color: #FF3322;
+}
+
+.let {
+  color: #66AAFF;
+}
+
+.rand {
+  text-decoration: none;
+  color: #55DDFF;
+  padding: 8px;
+}
+.rand:hover {
+  background-color: #750d19;
+}
+
+body {
+  margin: 0px 50px;
+}
