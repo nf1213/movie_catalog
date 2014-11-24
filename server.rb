@@ -23,12 +23,12 @@ end
 
 def movies_from_db
   movies = db_connection do |conn|
-    conn.exec('SELECT * FROM movies ORDER BY title')
+    conn.exec('SELECT movies.id, movies.title, movies.year, movies.synopsis, genres.name AS genre, studios.name AS studio FROM movies JOIN genres ON genres.id = movies.genre_id JOIN studios ON movies.studio_id = studios.id ORDER BY movies.title')
   end
 end
 
 def movies_from_db_to_hash
-  movies_array = movies_from_db
+  movies_array = movies_from_db.to_a
   hash = {}
 
   movies_array.each do |movie|
@@ -62,12 +62,9 @@ get '/filter/' do
 end
 
 get '/movies/:id' do
-  id = params[:id].to_i
+  id = params[:id]
   @movies = movies_from_db_to_hash
-  @movie = db_connection do |conn|
-    conn.exec("SELECT * FROM movies WHERE id = #{id}")
-  end
-  @movie = @movie.to_a[0]
+  @movie = @movies[id]
   @letters = 'a'.upto('z').to_a
   @random = random_number
   erb :show
