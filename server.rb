@@ -14,11 +14,12 @@ def db_connection
 end
 
 def random_number
-  count = db_connection do |conn|
-    conn.exec('SELECT count(*) FROM movies')
+  random = 0
+  @movies = movies_from_db_to_hash
+  while !@movies.has_key?(random.to_s) do
+    random = rand(@movies.size).round
   end
-  count = count[0]['count'].to_i
-  random = rand(count).round
+  random
 end
 
 def movies_from_db
