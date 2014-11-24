@@ -22,14 +22,14 @@
   </div>
   <% @movies.each do |id, info| %>
     <% if @filter.nil? %>
-        <p><a class="title" href="/movies/<%= id%>"><%= info[:title] %></a></p>
+        <p><a class="title" href="/movies/<%= id%>"><%= info['title'] %></a></p>
     <% elsif @filter.length == 1%>
-      <% if info[:title] =~ /^#{@filter}.*$/i %>
-        <p><a class="title" href="/movies/<%= id%>"><%= info[:title] %></a></p>
+      <% if info['title'] =~ /^#{@filter}.*$/i %>
+        <p><a class="title" href="/movies/<%= id%>"><%= info['title'] %></a></p>
       <% end %>
     <% else %>
-      <% if info[:title] =~ /#{@filter}/i %>
-        <p><a class="title" href="/movies/<%= id%>"><%= info[:title] %></a></p>
+      <% if info['title'] =~ /#{@filter}/i %>
+        <p><a class="title" href="/movies/<%= id%>"><%= info['title'] %></a></p>
       <% end %>
     <% end %>
   <% end %>

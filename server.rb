@@ -1,50 +1,44 @@
 require 'sinatra'
 require 'sinatra/reloader'
-require 'csv'
+require 'pg'
+
+def db_connection
+  begin
+    connection = PG.connect(dbname: 'movies')
+
+    yield(connection)
+
+  ensure
+    connection.close
+  end
+end
 
 def random_number
- random = 0
-  while !@movies.has_key?(random.to_s) do
-    random = rand(@movies.size).round
-    rand
+  count = db_connection do |conn|
+    conn.exec('SELECT count(*) FROM movies')
   end
-  random
+  count = count[0]['count'].to_i
+  random = rand(count).round
 end
 
-def movies_from_csv
-  movies = []
-
-  CSV.foreach('movies.csv', headers: true) do |row|
-      movies << {
-        id: row['id'],
-        title: row['title'],
-        year: row['year'],
-        synopsis: row['synopsis'],
-        rating: row['rating'],
-        genre: row['genre'],
-        studio: row['studio']
-      }
+def movies_from_db
+  movies = db_connection do |conn|
+    conn.exec('SELECT * FROM movies ORDER BY title')
   end
-
-  movies
 end
 
-def movie_hash
-  movies_array = movies_from_csv
-
-  movies_array.sort_by! { |movie| movie[:title]}
-
+def movies_from_db_to_hash
+  movies_array = movies_from_db
   hash = {}
 
   movies_array.each do |movie|
-    hash[movie[:id]] = movie
+    hash[movie['id']] = movie
   end
-  
   hash
 end
 
 get '/movies' do
-  @movies = movie_hash
+  @movies = movies_from_db_to_hash
   @letters = 'a'.upto('z').to_a
   @random = random_number
   erb :index
@@ -57,7 +51,7 @@ end
 
 get '/filter/:filter' do
   @letters = 'a'.upto('z').to_a
-  @movies = movie_hash
+  @movies = movies_from_db_to_hash
   @filter = params[:filter]
   @random = random_number
   erb :index
@@ -68,8 +62,12 @@ get '/filter/' do
 end
 
 get '/movies/:id' do
-  @movies = movie_hash
-  @movie = @movies[params[:id]]
+  id = params[:id].to_i
+  @movies = movies_from_db_to_hash
+  @movie = db_connection do |conn|
+    conn.exec("SELECT * FROM movies WHERE id = #{id}")
+  end
+  @movie = @movie.to_a[0]
   @letters = 'a'.upto('z').to_a
   @random = random_number
   erb :show
