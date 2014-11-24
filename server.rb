@@ -24,7 +24,7 @@ end
 
 def movies_from_db
   movies = db_connection do |conn|
-    conn.exec('SELECT movies.id, movies.title, movies.year, movies.synopsis, genres.name AS genre, studios.name AS studio FROM movies JOIN genres ON genres.id = movies.genre_id JOIN studios ON movies.studio_id = studios.id ORDER BY movies.title')
+    conn.exec('SELECT movies.id, movies.title, movies.year, movies.synopsis, movies.rating, genres.name AS genre, studios.name AS studio FROM movies JOIN genres ON genres.id = movies.genre_id JOIN studios ON movies.studio_id = studios.id ORDER BY movies.title')
   end
 end
 
