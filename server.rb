@@ -109,8 +109,12 @@ def find_actors_starting_with(let)
   actors.to_a
 end
 
-def movie_titles_and_ids
-  sql = 'SELECT title, id FROM movies ORDER BY title'
+def find_movies
+  sql = 'SELECT movies.title, movies.year, movies.rating,
+  genres.name AS genre, studios.name AS studio, movies.id FROM movies
+  JOIN genres ON movies.genre_id = genres.id
+  JOIN studios ON movies.studio_id = studios.id
+  ORDER BY title'
   movies = db_connection do |db|
     db.exec(sql)
   end
@@ -132,7 +136,7 @@ def get_actor_movie_count
 end
 
 get '/movies' do
-  @movies = movie_titles_and_ids
+  @movies = find_movies
   @letters = 'a'.upto('z').to_a
   erb :'movies/index'
 end
