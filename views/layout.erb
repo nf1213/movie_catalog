@@ -11,13 +11,13 @@
     <p>
       Sort movies by letter
       <% @letters.each do |let| %>
-      <a class="let" href='/filter/<%= let %>'><%= let %></a>
+      <a class="let" href='/movies?filter=<%=let %>'><%= let %></a>
       <% end %>
     </p>
     <p>
       Actors by letter
       <% @letters.each do |let| %>
-      <a class="let" href='/actors/filter/<%= let %>'><%= let %></a>
+      <a class="let" href='/actors?filter=<%= let %>'><%= let %></a>
       <% end %>
     </p>
     <p>
@@ -31,7 +31,7 @@
         <option value="movies">Movies</option>
         <option value="actors">Actors</option>
       </select>
-      <input type="text" name="query" id="query" />
+      <input type="text" name="filter" id="filter" />
 
       <input type="submit" value="Search" />
     </form>

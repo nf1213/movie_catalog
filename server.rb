@@ -157,26 +157,36 @@ get '/movies' do
   offset = @page * 20
   @movies = find_movies(offset)
   @letters = 'a'.upto('z').to_a
+
+  filter = params[:filter]
+
+  if filter
+    filter.gsub!("+", " ")
+
+    if filter.length == 1
+      @movies = find_movies_starting_with(filter)
+    else
+      @movies = find_movies_by_title(filter)
+    end
+    @movies = find_movies_by_title(filter)
+  end
   erb :'movies/index'
 end
 
 get '/actors' do
   @actors = actor_names_and_ids
   @letters = 'a'.upto('z').to_a
-  erb :'actors/index'
-end
-
-get '/actors/filter/:filter' do
-  @letters = 'a'.upto('z').to_a
   filter = params[:filter]
-  filter.gsub!("+", " ")
 
-  if filter.length == 1
-    @actors = find_actors_starting_with(filter)
-  else
-    @actors = find_actors_by_title(filter)
+  if filter
+    filter.gsub!("+", " ")
+
+    if filter.length == 1
+      @actors = find_actors_starting_with(filter)
+    else
+      @actors = find_actors_by_title(filter)
+    end
   end
-
   erb :'actors/index'
 end
 
@@ -189,28 +199,14 @@ get '/actors/:id' do
 end
 
 get '/search/' do
-  @search = params[:query]
-  @search.gsub!(" ", "+")
+  search = params[:filter]
+  search.gsub!(" ", "+")
 
   if params[:select] == "movies"
-    redirect "/filter/#{@search}"
+    redirect "/movies?filter=#{search}"
   else
-    redirect "/actors/filter/#{@search}"
+    redirect "/actors?filter=#{search}"
   end
-end
-
-get '/filter/:filter' do
-  @letters = 'a'.upto('z').to_a
-  filter = params[:filter]
-  filter.gsub!("+", " ")
-
-  if filter.length == 1
-    @movies = find_movies_starting_with(filter)
-  else
-    @movies = find_movies_by_title(filter)
-  end
-
-  erb :'movies/index'
 end
 
 get '/random' do
@@ -219,10 +215,6 @@ get '/random' do
   id = @movie['id']
   @actors = find_actors_by_movie(id)
   erb :'movies/show'
-end
-
-get '/filter/' do
-  redirect '/movies'
 end
 
 get '/movies/:id' do
