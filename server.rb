@@ -115,12 +115,12 @@ def find_actors_starting_with(let)
   actors.to_a
 end
 
-def find_movies
-  sql = 'SELECT movies.title, movies.year, movies.rating,
+def find_movies(offset)
+  sql = "SELECT movies.title, movies.year, movies.rating,
   genres.name AS genre, studios.name AS studio, movies.id FROM movies
   JOIN genres ON movies.genre_id = genres.id
   JOIN studios ON movies.studio_id = studios.id
-  ORDER BY title'
+  ORDER BY title LIMIT 20 OFFSET #{offset}"
   movies = db_connection do |db|
     db.exec(sql)
   end
@@ -150,7 +150,12 @@ def find_actors_by_movie(id)
 end
 
 get '/movies' do
-  @movies = find_movies
+  @page = @params[:page].to_i
+  if @page == nil || @page < 0
+    page = 0
+  end
+  offset = @page * 20
+  @movies = find_movies(offset)
   @letters = 'a'.upto('z').to_a
   erb :'movies/index'
 end
