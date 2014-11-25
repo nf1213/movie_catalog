@@ -135,10 +135,18 @@ def actor_names_and_ids
   actors.to_a
 end
 
-def get_actor_movie_count
+def find_actors_by_movie(id)
   sql = %{
-
+    SELECT actors.name, cast_members.character, actors.id FROM cast_members
+    JOIN movies ON cast_members.movie_id = movies.id
+    JOIN actors ON cast_members.actor_id = actors.id
+    WHERE movies.id = #{id}
+    ORDER BY title
   }
+  actors = db_connection do |db|
+    db.exec(sql)
+  end
+  actors.to_a
 end
 
 get '/movies' do
@@ -203,6 +211,8 @@ end
 get '/random' do
   @letters = @letters = 'a'.upto('z').to_a
   @movie = find_random_movie
+  id = @movie['id']
+  @actors = find_actors_by_movie(id)
   erb :'movies/show'
 end
 
@@ -214,6 +224,7 @@ get '/movies/:id' do
   id = params[:id]
   @movie = find_movie_by_id(id)
   @letters = 'a'.upto('z').to_a
+  @actors = find_actors_by_movie(id)
   erb :'movies/show'
 end
 

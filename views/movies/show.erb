@@ -10,12 +10,23 @@
       <%= @movie['rating'] %>
     </li>
   <% end %>
-
   <% if !@movie['studio'].nil? %>
     <li>Studio:
       <%= @movie['studio'] %>
     </li>
   <% end %>
 </ul>
+    <table>
+      <tr>
+        <td><h3>Actor</h3></td>
+        <td><h3>Character</h3></td>
+      </tr>
+      <% @actors.each do |actor| %>
+      <tr>
+        <td><a href="/actors/<%= actor['id'] %>"><%= actor['name'] %></a></td>
+        <td><%= actor['character'] %></td>
+      </tr>
+      <% end %>
+    </table>
 <p><a href="http://netflix.com/search/<%= @movie['title']%>" target="_blank">
   Can I watch this on Netflix? (Probably not, but let's see...)</a></p>
