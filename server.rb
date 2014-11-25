@@ -140,13 +140,14 @@ end
 get '/actors/filter/:filter' do
   @letters = 'a'.upto('z').to_a
   filter = params[:filter]
+  filter.gsub!("+", " ")
 
   if filter.length == 1
     @actors = find_actors_starting_with(filter)
   else
     @actors = find_actors_by_title(filter)
   end
-  
+
   erb :'actors/index'
 end
 
