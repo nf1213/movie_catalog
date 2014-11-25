@@ -43,7 +43,7 @@ end
 
 def find_actor_by_id(id)
   sql = %{
-    SELECT movies.title, cast_members.character FROM actors
+    SELECT movies.title, cast_members.character, movies.id FROM actors
     JOIN cast_members ON cast_members.actor_id = actors.id
     JOIN movies ON cast_members.movie_id = movies.id
     WHERE actors.id = $1 ORDER BY movies.title
@@ -123,6 +123,12 @@ def actor_names_and_ids
     db.exec(sql)
   end
   actors.to_a
+end
+
+def get_actor_movie_count
+  sql = %{
+
+  }
 end
 
 get '/movies' do

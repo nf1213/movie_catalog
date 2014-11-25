@@ -3,8 +3,15 @@
 </h2>
 
 <h3>Movies:</h3>
-<ul>
-  <% @actor.each do |movie| %>
-    <li><%= movie['title'] %> | <%= movie['character'] %></li>
-  <% end %>
-</ul>
+<table>
+  <tr>
+    <td><h3>Movie</h3></td>
+    <td><h3>Character</h3></td>
+  </tr>
+    <% @actor.each do |movie| %>
+      <tr>
+        <td><a href="/movies/<%= movie['id'] %>"><%= movie['title'] %></a></td>
+        <td><%= movie['character'] %></td>
+      </tr>
+    <% end %>
+</table>
