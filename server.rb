@@ -66,9 +66,12 @@ def find_actor_name_by_id(id)
 end
 
 def find_movies_by_title(string)
-  sql = %{
-    SELECT title, id FROM movies
-    WHERE title ILIKE '%#{string}%' ORDER BY title
+  sql = %{SELECT movies.title, movies.year, movies.rating,
+    genres.name AS genre, studios.name AS studio, movies.id FROM movies
+    JOIN genres ON movies.genre_id = genres.id
+    JOIN studios ON movies.studio_id = studios.id
+    WHERE title ILIKE '%#{string}%'
+    ORDER BY title
   }
   movies = db_connection do |db|
     db.exec(sql)
@@ -88,9 +91,12 @@ def find_actors_by_title(string)
 end
 
 def find_movies_starting_with(let)
-  sql = %{
-    SELECT title, id FROM movies
-    WHERE title ILIKE '#{let}%' ORDER BY title
+  sql = %{SELECT movies.title, movies.year, movies.rating,
+    genres.name AS genre, studios.name AS studio, movies.id FROM movies
+    JOIN genres ON movies.genre_id = genres.id
+    JOIN studios ON movies.studio_id = studios.id
+    WHERE title ILIKE '#{let}%'
+    ORDER BY title
   }
   movies = db_connection do |db|
     db.exec(sql)
