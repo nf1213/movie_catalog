@@ -1,0 +1,21 @@
+<h2 class="title">
+  <%= @movie['title'] %> -
+  <%= @movie['year'] %>
+</h2>
+<p>Genre: <%= @movie['genre'] %></p>
+<p><%= @movie['synopsis'] %></p>
+<ul>
+  <% if !@movie['rating'].nil? %>
+    <li>Rating:
+      <%= @movie['rating'] %>
+    </li>
+  <% end %>
+
+  <% if !@movie['studio'].nil? %>
+    <li>Studio:
+      <%= @movie['studio'] %>
+    </li>
+  <% end %>
+</ul>
+<p><a href="http://netflix.com/search/<%= @movie['title']%>" target="_blank">
+  Can I watch this on Netflix? (Probably not, but let's see...)</a></p>

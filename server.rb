@@ -29,7 +29,7 @@ end
 
 def find_movie_by_id(id)
   sql = %{
-    SELECT movies.id, movies.title, movies.year, movies.synopsis,
+    SELECT movies.title, movies.year, movies.synopsis,
     movies.rating, genres.name AS genre, studios.name AS studio FROM movies
     JOIN genres ON genres.id = movies.genre_id
     JOIN studios ON movies.studio_id = studios.id
@@ -39,6 +39,30 @@ def find_movie_by_id(id)
     db.exec_params(sql, [id])
   end
   movie.to_a.first
+end
+
+def find_actor_by_id(id)
+  sql = %{
+    SELECT movies.title, cast_members.character FROM actors
+    JOIN cast_members ON cast_members.actor_id = actors.id
+    JOIN movies ON cast_members.movie_id = movies.id
+    WHERE actors.id = $1 ORDER BY movies.title
+  }
+  actor = db_connection do |db|
+    db.exec_params(sql, [id])
+  end
+  actor.to_a
+end
+
+def find_actor_name_by_id(id)
+  sql = %{
+    SELECT name FROM actors
+    WHERE id = $1
+  }
+  name = db_connection do |db|
+    db.exec_params(sql, [id])
+  end
+  name.to_a[0]['name']
 end
 
 def find_movies_by_title(string)
@@ -52,15 +76,37 @@ def find_movies_by_title(string)
   movies.to_a
 end
 
-def find_movies_starting_with(string)
+def find_actors_by_title(string)
   sql = %{
-    SELECT title, id FROM movies
-    WHERE title ILIKE '#{string}%' ORDER BY title
+    SELECT name, id FROM actors
+    WHERE name ILIKE '%#{string}%' ORDER BY name
   }
   movies = db_connection do |db|
     db.exec(sql)
   end
   movies.to_a
+end
+
+def find_movies_starting_with(let)
+  sql = %{
+    SELECT title, id FROM movies
+    WHERE title ILIKE '#{let}%' ORDER BY title
+  }
+  movies = db_connection do |db|
+    db.exec(sql)
+  end
+  movies.to_a
+end
+
+def find_actors_starting_with(let)
+  sql = %{
+    SELECT name, id FROM actors
+    WHERE name ILIKE '#{let}%' ORDER BY name
+  }
+  actors = db_connection do |db|
+    db.exec(sql)
+  end
+  actors.to_a
 end
 
 def movie_titles_and_ids
@@ -71,34 +117,76 @@ def movie_titles_and_ids
   movies.to_a
 end
 
+def actor_names_and_ids
+  sql = 'SELECT name, id FROM actors ORDER BY name'
+  actors = db_connection do |db|
+    db.exec(sql)
+  end
+  actors.to_a
+end
+
 get '/movies' do
   @movies = movie_titles_and_ids
   @letters = 'a'.upto('z').to_a
-  erb :index
+  erb :'movies/index'
+end
+
+get '/actors' do
+  @actors = actor_names_and_ids
+  @letters = 'a'.upto('z').to_a
+  erb :'actors/index'
+end
+
+get '/actors/filter/:filter' do
+  @letters = 'a'.upto('z').to_a
+  filter = params[:filter]
+
+  if filter.length == 1
+    @actors = find_actors_starting_with(filter)
+  else
+    @actors = find_actors_by_title(filter)
+  end
+  
+  erb :'actors/index'
+end
+
+get '/actors/:id' do
+  @letters = 'a'.upto('z').to_a
+  id = params[:id]
+  @actor = find_actor_by_id(id)
+  @name = find_actor_name_by_id(id)
+  erb :'actors/show'
 end
 
 get '/search/' do
   @search = params[:query]
   @search.gsub!(" ", "+")
-  redirect "/filter/#{@search}"
+
+  if params[:select] == "movies"
+    redirect "/filter/#{@search}"
+  else
+    redirect "/actors/filter/#{@search}"
+  end
 end
 
 get '/filter/:filter' do
   @letters = 'a'.upto('z').to_a
   filter = params[:filter]
   filter.gsub!("+", " ")
+
   if filter.length == 1
     @movies = find_movies_starting_with(filter)
   else
     @movies = find_movies_by_title(filter)
   end
-  erb :index
+
+  erb :'movies/index'
 end
 
 get '/random' do
   @letters = @letters = 'a'.upto('z').to_a
   @movie = find_random_movie
-  erb :show
+  erb :'movies/show'
 end
 
 get '/filter/' do
@@ -109,7 +197,7 @@ get '/movies/:id' do
   id = params[:id]
   @movie = find_movie_by_id(id)
   @letters = 'a'.upto('z').to_a
-  erb :show
+  erb :'movies/show'
 end
 
 get '/' do

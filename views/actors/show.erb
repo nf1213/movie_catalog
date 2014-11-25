@@ -1,0 +1,10 @@
+<h2 class="title">
+  <%= @name %>
+</h2>
+
+<h3>Movies:</h3>
+<ul>
+  <% @actor.each do |movie| %>
+    <li><%= movie['title'] %> | <%= movie['character'] %></li>
+  <% end %>
+</ul>
