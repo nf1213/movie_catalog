@@ -2,160 +2,117 @@ require 'sinatra'
 require 'sinatra/reloader'
 require 'pg'
 
-def db_connection
+def db(sql, params = [])
   begin
     connection = PG.connect(dbname: 'movies')
 
-    yield(connection)
-
+    result = connection.exec_params(sql, params)
+    result.to_a
   ensure
     connection.close
   end
 end
 
 def find_random_movie
-  sql = %{
-    SELECT movies.id, movies.title, movies.year, movies.synopsis,
-    movies.rating, genres.name AS genre, studios.name AS studio FROM movies
-    JOIN genres ON genres.id = movies.genre_id
-    JOIN studios ON movies.studio_id = studios.id
-    ORDER BY RANDOM() LIMIT 1
-  }
-  movie = db_connection do |db|
-    db.exec(sql)
-  end
-  movie.to_a.first
+  %{
+  SELECT movies.id, movies.title, movies.year, movies.synopsis,
+  movies.rating, genres.name AS genre, studios.name AS studio FROM movies
+  JOIN genres ON genres.id = movies.genre_id
+  JOIN studios ON movies.studio_id = studios.id
+  ORDER BY RANDOM() LIMIT 1
+}
 end
 
-def find_movie_by_id(id)
-  sql = %{
-    SELECT movies.title, movies.year, movies.synopsis,
-    movies.rating, genres.name AS genre, studios.name AS studio FROM movies
-    JOIN genres ON genres.id = movies.genre_id
-    JOIN studios ON movies.studio_id = studios.id
-    WHERE movies.id = $1 ORDER BY movies.title
-  }
-  movie = db_connection do |db|
-    db.exec_params(sql, [id])
-  end
-  movie.to_a.first
+def find_movie_by_id
+  %{
+  SELECT movies.title, movies.year, movies.synopsis,
+  movies.rating, genres.name AS genre, studios.name AS studio FROM movies
+  JOIN genres ON genres.id = movies.genre_id
+  JOIN studios ON movies.studio_id = studios.id
+  WHERE movies.id = $1 ORDER BY movies.title
+}
 end
 
-def find_actor_by_id(id)
-  sql = %{
-    SELECT movies.title, cast_members.character, movies.id FROM actors
-    JOIN cast_members ON cast_members.actor_id = actors.id
-    JOIN movies ON cast_members.movie_id = movies.id
-    WHERE actors.id = $1 ORDER BY movies.title
-  }
-  actor = db_connection do |db|
-    db.exec_params(sql, [id])
-  end
-  actor.to_a
+def find_actor_by_id
+  %{
+  SELECT movies.title, cast_members.character, movies.id FROM actors
+  JOIN cast_members ON cast_members.actor_id = actors.id
+  JOIN movies ON cast_members.movie_id = movies.id
+  WHERE actors.id = $1 ORDER BY movies.title
+}
 end
 
-def find_actor_name_by_id(id)
-  sql = %{
-    SELECT name FROM actors
-    WHERE id = $1
-  }
-  name = db_connection do |db|
-    db.exec_params(sql, [id])
-  end
-  name.to_a[0]['name']
+def find_actor_name_by_id
+  %{
+  SELECT name FROM actors
+  WHERE id = $1
+}
 end
 
 def find_movies_by_title(string)
-  sql = %{SELECT movies.title, movies.year, movies.rating,
-    genres.name AS genre, studios.name AS studio, movies.id FROM movies
-    JOIN genres ON movies.genre_id = genres.id
-    JOIN studios ON movies.studio_id = studios.id
-    WHERE title ILIKE '%#{string}%'
-    ORDER BY title
-  }
-  movies = db_connection do |db|
-    db.exec(sql)
-  end
-  movies.to_a
-end
-
-def find_actors_by_title(string)
-  sql = %{
-    SELECT name, id FROM actors
-    WHERE name ILIKE '%#{string}%' ORDER BY name
-  }
-  movies = db_connection do |db|
-    db.exec(sql)
-  end
-  movies.to_a
-end
-
-def find_movies_starting_with(let)
-  sql = %{SELECT movies.title, movies.year, movies.rating,
-    genres.name AS genre, studios.name AS studio, movies.id FROM movies
-    JOIN genres ON movies.genre_id = genres.id
-    JOIN studios ON movies.studio_id = studios.id
-    WHERE title ILIKE '#{let}%'
-    ORDER BY title
-  }
-  movies = db_connection do |db|
-    db.exec(sql)
-  end
-  movies.to_a
-end
-
-def find_actors_starting_with(let)
-  sql = %{
-    SELECT name, id FROM actors
-    WHERE name ILIKE '#{let}%' ORDER BY name
-  }
-  actors = db_connection do |db|
-    db.exec(sql)
-  end
-  actors.to_a
-end
-
-def find_movies(offset)
-  sql = "SELECT movies.title, movies.year, movies.rating,
+  %{
+  SELECT movies.title, movies.year, movies.rating,
   genres.name AS genre, studios.name AS studio, movies.id FROM movies
   JOIN genres ON movies.genre_id = genres.id
   JOIN studios ON movies.studio_id = studios.id
-  ORDER BY title LIMIT 20 OFFSET #{offset}"
-  movies = db_connection do |db|
-    db.exec(sql)
-  end
-  movies.to_a
+  WHERE title ILIKE '%#{string}%'
+  ORDER BY title
+}
 end
 
-def actor_names_and_ids
-  sql = 'SELECT name, id FROM actors ORDER BY name'
-  actors = db_connection do |db|
-    db.exec(sql)
-  end
-  actors.to_a
+def find_actors_by_name(string)
+  %{
+  SELECT name, id FROM actors
+  WHERE name ILIKE '%#{string}%' ORDER BY name
+}
 end
 
-def find_actors_by_movie(id)
-  sql = %{
-    SELECT actors.name, cast_members.character, actors.id FROM cast_members
-    JOIN movies ON cast_members.movie_id = movies.id
-    JOIN actors ON cast_members.actor_id = actors.id
-    WHERE movies.id = #{id}
-    ORDER BY title
-  }
-  actors = db_connection do |db|
-    db.exec(sql)
-  end
-  actors.to_a
+def find_movies_starting_with(let)
+  %{
+  SELECT movies.title, movies.year, movies.rating,
+  genres.name AS genre, studios.name AS studio, movies.id FROM movies
+  JOIN genres ON movies.genre_id = genres.id
+  JOIN studios ON movies.studio_id = studios.id
+  WHERE title ILIKE '#{let}%'
+  ORDER BY title
+}
+end
+
+def find_actors_starting_with(let)
+  %{
+  SELECT name, id FROM actors
+  WHERE name ILIKE '#{let}%' ORDER BY name
+}
+end
+
+def find_movies
+  %{
+  SELECT movies.title, movies.year, movies.rating,
+  genres.name AS genre, studios.name AS studio, movies.id FROM movies
+  JOIN genres ON movies.genre_id = genres.id
+  JOIN studios ON movies.studio_id = studios.id
+  ORDER BY title
+}
+end
+
+def find_actors
+  %{
+  SELECT name, id FROM actors ORDER BY name
+}
+end
+
+def find_actors_by_movie_id
+  %{
+  SELECT actors.name, cast_members.character, actors.id FROM cast_members
+  JOIN movies ON cast_members.movie_id = movies.id
+  JOIN actors ON cast_members.actor_id = actors.id
+  WHERE movies.id = $1
+  ORDER BY title
+}
 end
 
 get '/movies' do
-  @page = @params[:page].to_i
-  if @page == nil || @page < 0
-    page = 0
-  end
-  offset = @page * 20
-  @movies = find_movies(offset)
+  @movies = db(find_movies)
   @letters = 'a'.upto('z').to_a
 
   filter = params[:filter]
@@ -164,17 +121,17 @@ get '/movies' do
     filter.gsub!("+", " ")
 
     if filter.length == 1
-      @movies = find_movies_starting_with(filter)
+      @movies = db(find_movies_starting_with(filter))
     else
-      @movies = find_movies_by_title(filter)
+      @movies = db(find_movies_by_title(filter))
     end
-    @movies = find_movies_by_title(filter)
+    @movies = db(find_movies_by_title(filter))
   end
   erb :'movies/index'
 end
 
 get '/actors' do
-  @actors = actor_names_and_ids
+  @actors = db(find_actors)
   @letters = 'a'.upto('z').to_a
   filter = params[:filter]
 
@@ -182,9 +139,9 @@ get '/actors' do
     filter.gsub!("+", " ")
 
     if filter.length == 1
-      @actors = find_actors_starting_with(filter)
+      @actors = db(find_actors_starting_with(filter))
     else
-      @actors = find_actors_by_title(filter)
+      @actors = db(find_actors_by_name(filter))
     end
   end
   erb :'actors/index'
@@ -193,8 +150,8 @@ end
 get '/actors/:id' do
   @letters = 'a'.upto('z').to_a
   id = params[:id]
-  @actor = find_actor_by_id(id)
-  @name = find_actor_name_by_id(id)
+  @actor = db(find_actor_by_id, [id])
+  @name = db(find_actor_name_by_id, [id])[0]['name']
   erb :'actors/show'
 end
 
@@ -211,17 +168,17 @@ end
 
 get '/random' do
   @letters = @letters = 'a'.upto('z').to_a
-  @movie = find_random_movie
+  @movie = db(find_random_movie).first
   id = @movie['id']
-  @actors = find_actors_by_movie(id)
+  @actors = db(find_actors_by_movie_id, [id])
   erb :'movies/show'
 end
 
 get '/movies/:id' do
   id = params[:id]
-  @movie = find_movie_by_id(id)
+  @movie = db(find_movie_by_id, [id]).first
   @letters = 'a'.upto('z').to_a
-  @actors = find_actors_by_movie(id)
+  @actors = db(find_actors_by_movie_id, [id])
   erb :'movies/show'
 end
 
